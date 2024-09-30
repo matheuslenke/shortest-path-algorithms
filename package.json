@@ -1,0 +1,19 @@
+{
+  "name": "dijkstra",
+  "version": "1.0.0",
+  "description": "",
+  "type": "module",
+  "main": "main.js",
+  "scripts": {
+    "start:dijkstra": "node dist/dijkstra.js",
+    "start:bellman-ford": "node dist/bellman-ford.js",
+    "generate": "node dist/generate-graph.js",
+    "watch": "tsc -w"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "@types/node": "^22.1.0"
+  }
+}
