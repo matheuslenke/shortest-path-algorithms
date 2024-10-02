@@ -53,7 +53,6 @@ const readGraphFromCSV = async (filename: string): Promise<Graph> => {
         const source = record.source;
         const target = record.target;
         const weight = parseFloat(record.weight);
-        console.log(source, target, weight)
 
         if (!graph[source]) {
             graph[source] = {};
@@ -77,7 +76,7 @@ const main = async () => {
         try {
             const filePath = path.join(directoryPath, filename);
             const graph = await readGraphFromCSV(filePath);
-            console.log(graph)
+
             const startNode = Object.keys(graph)[0];
             const { distances, previousNodes } = dijkstra(graph, startNode);
             console.log(`Shortest distances from node ${startNode}:`);
