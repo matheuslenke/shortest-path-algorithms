@@ -1,0 +1,8 @@
+source,target,weight
+Node1,Node2,3
+Node1,Node3,8
+Node2,Node4,-2
+Node3,Node4,5
+Node3,Node5,1
+Node4,Node6,-4
+Node5,Node6,7

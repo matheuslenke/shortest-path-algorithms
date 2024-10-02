@@ -1,0 +1,7 @@
+source,target,weight
+P,Q,5
+P,R,2
+Q,S,-4
+R,S,3
+R,T,1
+S,T,2

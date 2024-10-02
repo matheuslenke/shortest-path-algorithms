@@ -1,0 +1,8 @@
+source,target,weight
+CityA,CityB,30
+CityA,CityC,15
+CityB,CityD,10
+CityC,CityD,20
+CityC,CityE,35
+CityD,CityF,15
+CityE,CityF,25
