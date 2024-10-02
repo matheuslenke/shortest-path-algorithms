@@ -1,92 +1,95 @@
-class NodeVertex {
-    nameOfVertex!: string;
-    weight!: number;
+import { parse } from 'csv-parse';
+import fs from 'fs';
+import path from 'path';
+
+interface Graph {
+    [node: string]: { [neighbor: string]: number };
 }
 
-class Vertex {
-    name: string;
-    nodes: NodeVertex[];
-    weight: number;
+const dijkstra = (graph: Graph, startNode: string): { distances: { [node: string]: number }, previousNodes: { [node: string]: string | null } } => {
+    const distances: { [node: string]: number } = {};
+    const previousNodes: { [node: string]: string | null } = {};
+    const unvisitedNodes = new Set<string>(Object.keys(graph));
 
-    constructor(theName: string, theNodes: NodeVertex[], theWeight: number) {
-        this.name = theName;
-        this.nodes = theNodes;
-        this.weight = theWeight;
+    for (const node in graph) {
+        distances[node] = Infinity;
     }
-}
+    distances[startNode] = 0;
 
-class Dijkstra {
-
-    vertices: any;
-    constructor() {
-        this.vertices = {};
-    }
-
-    addVertex(vertex: Vertex): void {
-        this.vertices[vertex.name] = vertex;
-    }
-
-    findPointsOfShortestWay(start: string, finish: string, weight: number): string[] {
-
-        let nextVertex: string = finish;
-        let arrayWithVertex: string[] = [];
-        while (nextVertex !== start) {
-
-            let minWeigth: number = Number.MAX_VALUE;
-            let minVertex: string = "";
-            for (let i of this.vertices[nextVertex].nodes) {
-                if (i.weight + this.vertices[i.nameOfVertex].weight < minWeigth) {
-                    minWeigth = this.vertices[i.nameOfVertex].weight;
-                    minVertex = i.nameOfVertex;
-                }
+    while (unvisitedNodes.size > 0) {
+        let currentNode: string | null = null;
+        for (const node of unvisitedNodes) {
+            if (currentNode === null || distances[node] < distances[currentNode]) {
+                currentNode = node;
             }
-            arrayWithVertex.push(minVertex);
-            nextVertex = minVertex;
-        }
-        return arrayWithVertex;
-    }
-
-
-    findShortestWay(start: string, finish: string): string[] {
-
-        let nodes: any = {};
-        let visitedVertex: string[] = [];
-
-        for (let i in this.vertices) {
-            if (this.vertices[i].name === start) {
-                this.vertices[i].weight = 0;
-
-            } else {
-                this.vertices[i].weight = Number.MAX_VALUE;
-            }
-            nodes[this.vertices[i].name] = this.vertices[i].weight;
         }
 
-        while (Object.keys(nodes).length !== 0) {
-            let sortedVisitedByWeight: string[] = Object.keys(nodes).sort((a, b) => this.vertices[a].weight - this.vertices[b].weight);
-            let currentVertex: Vertex = this.vertices[sortedVisitedByWeight[0]];
-            for (let j of currentVertex.nodes) {
-                const calculateWeight: number = currentVertex.weight + j.weight;
-                if (calculateWeight < this.vertices[j.nameOfVertex].weight) {
-                    this.vertices[j.nameOfVertex].weight = calculateWeight;
-                }
-            }
-            delete nodes[sortedVisitedByWeight[0]];
+        if (currentNode === null) {
+            break; // No reachable nodes left
         }
-        const finishWeight: number = this.vertices[finish].weight;
-        let arrayWithVertex: string[] = this.findPointsOfShortestWay(start, finish, finishWeight).reverse();
-        arrayWithVertex.push(finish, finishWeight.toString());
-        return arrayWithVertex;
+
+        unvisitedNodes.delete(currentNode);
+
+        for (const neighbor in graph[currentNode]) {
+            const tentativeDistance = distances[currentNode] + graph[currentNode][neighbor];
+            if (tentativeDistance < distances[neighbor]) {
+                distances[neighbor] = tentativeDistance;
+                previousNodes[neighbor] = currentNode;
+            }
+        }
     }
 
-}
+    return {
+        distances,
+        previousNodes
+    };
+};
 
-let dijkstra = new Dijkstra();
-dijkstra.addVertex(new Vertex("A", [{ nameOfVertex: "C", weight: 3 }, { nameOfVertex: "E", weight: 7 }, { nameOfVertex: "B", weight: 4 }], 1));
-dijkstra.addVertex(new Vertex("B", [{ nameOfVertex: "A", weight: 4 }, { nameOfVertex: "C", weight: 6 }, { nameOfVertex: "D", weight: 5 }], 1));
-dijkstra.addVertex(new Vertex("C", [{ nameOfVertex: "A", weight: 3 }, { nameOfVertex: "B", weight: 6 }, { nameOfVertex: "E", weight: 8 }, { nameOfVertex: "D", weight: 11 }], 1));
-dijkstra.addVertex(new Vertex("D", [{ nameOfVertex: "B", weight: 5 }, { nameOfVertex: "C", weight: 11 }, { nameOfVertex: "E", weight: 2 }, { nameOfVertex: "F", weight: 2 }], 1));
-dijkstra.addVertex(new Vertex("E", [{ nameOfVertex: "A", weight: 7 }, { nameOfVertex: "C", weight: 8 }, { nameOfVertex: "D", weight: 2 }, { nameOfVertex: "G", weight: 5 }], 1));
-dijkstra.addVertex(new Vertex("F", [{ nameOfVertex: "D", weight: 2 }, { nameOfVertex: "G", weight: 3 }], 1));
-dijkstra.addVertex(new Vertex("G", [{ nameOfVertex: "D", weight: 10 }, { nameOfVertex: "E", weight: 5 }, { nameOfVertex: "F", weight: 3 }], 1));
-console.log(dijkstra.findShortestWay("A", "F"));
+const readGraphFromCSV = async (filename: string): Promise<Graph> => {
+    const graph: Graph = {};
+    const parser = fs.createReadStream(filename).pipe(parse({ columns: true, skip_empty_lines: true }));
+
+    for await (const record of parser) {
+        const source = record.source;
+        const target = record.target;
+        const weight = parseFloat(record.weight);
+        console.log(source, target, weight)
+
+        if (!graph[source]) {
+            graph[source] = {};
+        }
+        graph[source][target] = weight;
+
+        if (!graph[target]) {
+            graph[target] = {};
+        }
+        graph[target][source] = weight; // For undirected graph
+    }
+
+    return graph;
+};
+
+const main = async () => {
+    const directoryPath = "./data/dijkstra";
+    const filenames = fs.readdirSync(directoryPath).filter(file => file.endsWith(".csv"));
+
+    filenames.forEach(async (filename) => {
+        try {
+            const filePath = path.join(directoryPath, filename);
+            const graph = await readGraphFromCSV(filePath);
+            console.log(graph)
+            const startNode = Object.keys(graph)[0];
+            const { distances, previousNodes } = dijkstra(graph, startNode);
+            console.log(`Shortest distances from node ${startNode}:`);
+            for (const node in distances) {
+                console.log(`To node ${node}: ${distances[node]}`);
+            }
+            console.log("\n")
+
+        } catch (error) {
+            console.error("Error reading graph data or running Dijkstra's algorithm:", error);
+        }
+    })
+};
+
+main();
