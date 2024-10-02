@@ -146,12 +146,18 @@ const main = async () => {
             const graph = await readGraphFromCSV(filePath);
             const startNode = Object.keys(graph)[0];
             renderGraph(graph, path.join(directoryPath, `output_${startNode}.png`))
+
+            const startTime = Date.now();
             const { distances, previousNodes } = bellmanFord(graph, startNode);
-            console.log(`Shortest distances from node ${startNode}:`);
-            for (const node in distances) {
-                console.log(`To node ${node}: ${distances[node]}`);
-            }
-            console.log("\n")
+            const endTime = Date.now();
+            const executionTime = endTime - startTime;
+            console.log(`Execution time for Bellman-Ford algorithm: ${executionTime} ms`);
+
+            // console.log(`Shortest distances from node ${startNode}:`);
+            // for (const node in distances) {
+            //     console.log(`To node ${node}: ${distances[node]}; previous: ${previousNodes[node]}`);
+            // }
+            // console.log("\n")
 
         } catch (error) {
             console.error("Error reading graph data or running Dijkstra's algorithm:", error);

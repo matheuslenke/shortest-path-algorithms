@@ -78,11 +78,16 @@ const main = async () => {
             const graph = await readGraphFromCSV(filePath);
 
             const startNode = Object.keys(graph)[0];
+
+            const startTime = Date.now();
             const { distances, previousNodes } = dijkstra(graph, startNode);
-            console.log(`Shortest distances from node ${startNode}:`);
-            for (const node in distances) {
-                console.log(`To node ${node}: ${distances[node]}`);
-            }
+            const endTime = Date.now();
+            const executionTime = endTime - startTime;
+            console.log(`Execution time for Dijkstra algorithm in ${filename}: ${executionTime} ms`);
+            // console.log(`Shortest distances from node ${startNode}:`);
+            // for (const node in distances) {
+            //     console.log(`To node ${node}: ${distances[node]}`);
+            // }
             console.log("\n")
 
         } catch (error) {
